@@ -1,0 +1,82 @@
+<html>
+<head>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+
+<script>
+
+function longpoll(url, callback) {
+
+	var req = new XMLHttpRequest ();
+	req.open ('GET', "http://localhost:12345" + url, true);
+
+	req.onreadystatechange = function (aEvt) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+				callback(req.responseText);
+				longpoll(url, callback);
+			} else {
+				alert ("long-poll connection lost");
+			}
+		}
+	};
+
+	req.send(null);
+}
+
+function recv(msg) {
+
+	var box = document.getElementById("box");
+
+	box.value += "\n" + msg;
+}
+
+function send() {
+
+	var from = document.getElementById("from");
+	var rcpt = document.getElementById("rcpt");
+	var box = document.getElementById("box");
+	var input = document.getElementById("input");
+
+	var req = new XMLHttpRequest ();
+	req.open ('POST', "http://localhost:12345/push?rcpt=" + rcpt.value, true);
+
+	req.onreadystatechange = function (aEvt) {
+		if (req.readyState == 4) {
+			if (req.status == 200) {
+			} else {
+				alert ("failed to send!");
+			}
+		}
+	};
+
+	req.send(from.value + ": " + input.value);
+
+	box.value += "\nme: " + input.value;
+	input.value = "";
+}
+
+function login() {
+
+	var from = document.getElementById("from");
+
+	longpoll("/poll?rcpt=" + from.value, recv);
+}
+
+</script>
+</head>
+<body>
+
+<div class="container">
+	<h1> The "Oh God I'm Hideous" Chat Program </h1>
+	username: <input type="text" id="from" /> <button onclick="login();">Login</button>
+	<br />
+	send to: <input type="text" id="rcpt" />
+	<br />
+
+	<textarea id="box" readonly="readonly" disabled="disabled" rows="20" cols="60" placeholder="Conversations will appear here"></textarea><br />
+	send: <input type="text" id="input" onchange="send();"/>
+</div>
+</body>
+</html>
